@@ -1,13 +1,17 @@
+import sys
 from api_requests import *
 from match_class import Match
+
+api_key = sys.argv[1]
+my_api = PersonalAPI(api_key)
 
 region = "euw"
 sumName = "Ecatta"
 seasons = "SEASON2015"
-sumId = get_summoner_id(region, sumName)
+sumId = my_api.get_summoner_id(region, sumName)
 
-champions_dict = get_champions_info(region)
-riot_matches = get_rankeds_list(region, sumId, seasons)
+champions_dict = my_api.get_champions_info(region)
+riot_matches = my_api.get_rankeds_list(region, sumId, seasons)
 
 matches = []
 for riot_match in riot_matches:
