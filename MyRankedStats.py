@@ -12,7 +12,9 @@ target = {
 }
 (target["summoner_id"], target["summoner_name"]) = api.get_summoner_id_and_name(target)
 
-process_champions_data(api, db, target)
-process_matches_data(api, db, target)
+#process_champions_data(api, db, target)
+#process_matches_data(api, db, target)
+
+get_stats(db, {"championId": [267]})
 
 # if __name__ == '__main__':

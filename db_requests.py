@@ -30,6 +30,7 @@ class DB(object):
         self.cursor.execute("DELETE FROM {}".format(table))
         self.connection.commit()
 
+    # Expects list of dictionaries as 'data' argument
     def refill_table(self, table, data: list):
         self.cursor.execute("DELETE FROM {}".format(table))
         self.cursor.execute(
@@ -42,12 +43,16 @@ class DB(object):
             )
         self.connection.commit()
 
-    # def get_matches(self, params: dict):
-    #     if len(params):
-    #         param_str = " WHERE " + reduce(lambda x, y: "{}, {}".format(x, y),
-    #                                        map(lambda p: "{} = {}".format(p, sqlp(params[p])), params))
-    #         print(param_str)
-    #     #self.cursor.execute("SELECT * FROM matches")
-#
-# if __name__ == '__main__':
-#     pass
+    # Expects dictionary with NON-EMPTY lists as values as 'params' argument
+    def get_data(self, table, params={}):
+        param_str = ""
+        if len(params):
+            param_str = " WHERE " + reduce(lambda x, y: "{} AND {}".format(x, y), map(lambda p: "({})".format(
+                reduce(lambda x, y: "{} OR {}".format(x, y), map(lambda v: "{} = {}".format(p, sqlp(v)), params[p]))
+            ), params))
+        self.cursor.execute("SELECT * FROM {}".format(table)+param_str)
+        return self.cursor.fetchall()
+
+if __name__ == '__main__':
+    db = DB()
+    print(db.get_data("matches", {"role": ["Support", "Middle"], "championId": [267, 143]}))

@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Хост: 127.0.0.1
--- Время создания: Янв 07 2016 г., 18:50
+-- Время создания: Янв 07 2016 г., 22:52
 -- Версия сервера: 10.1.9-MariaDB
 -- Версия PHP: 5.6.15
 
@@ -42,7 +42,11 @@ CREATE TABLE `matches` (
   `matchId` bigint(15) NOT NULL,
   `season` varchar(20) NOT NULL,
   `championId` int(10) NOT NULL,
-  `role` varchar(20) NOT NULL
+  `role` varchar(20) NOT NULL,
+  `winner` tinyint(1) NOT NULL,
+  `kills` int(4) NOT NULL,
+  `deaths` int(4) NOT NULL,
+  `assists` int(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------

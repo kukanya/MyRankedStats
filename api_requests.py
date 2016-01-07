@@ -9,7 +9,11 @@ class PersonalAPI:
         self.api_key = api_key
 
     def url_response_as_json(self, region, query):
-        response = urlopen(self.API.format(region) + query)
+        while True:
+            try:
+                response = urlopen(self.API.format(region) + query)
+                break
+            except: pass
         str_res = response.read().decode()
         json_res = json.loads(str_res)
         return json_res
@@ -32,7 +36,18 @@ class PersonalAPI:
         matches = sorted(matches_dict["matches"], key=lambda k: k['matchId'])
         return matches
 
-    # def get_match_info(self, region, match_id):
+    def get_match_info(self, target: dict, match_id):
+        all_match_info = self.url_response_as_json(
+                target["region"],
+                "{}/v2.2/match/{}?api_key={}".format(target["region"], match_id, self.api_key)
+        )
+        participant_id = tuple(filter(lambda p: p["player"]["summonerId"] == target["summoner_id"],
+                                      all_match_info["participantIdentities"]))[0]["participantId"]
+        target_info = tuple(filter(lambda p: p["participantId"] == participant_id,
+                                   all_match_info["participants"]))[0]["stats"]
+        return target_info
+
+
 
     def get_champions_info(self, target: dict):
         champions_dict = self.url_response_as_json(
@@ -40,4 +55,3 @@ class PersonalAPI:
                 "static-data/{}/v1.2/champion?dataById=true&api_key={}".format(target["region"], self.api_key)
         )
         return {"version": champions_dict["version"], "champions": champions_dict["data"]}
-
