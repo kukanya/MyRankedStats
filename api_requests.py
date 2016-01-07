@@ -14,7 +14,7 @@ class PersonalAPI:
         json_res = json.loads(str_res)
         return json_res
 
-    def get_summoner_id_and_name(self, target):
+    def get_summoner_id_and_name(self, target: dict):
         summoner_info = self.url_response_as_json(
                 target["region"],
                 "{}/v1.4/summoner/by-name/{}?api_key={}".format(target["region"], target["summoner_name"], self.api_key)
@@ -23,20 +23,21 @@ class PersonalAPI:
         summoner_name = summoner_info[target["summoner_name"].lower()]['name']
         return summoner_id, summoner_name
 
-    def get_rankeds_list(self, target):
+    def get_matches_list(self, target: dict):
         matches_dict = self.url_response_as_json(
                 target["region"],
-                "{}/v2.2/matchlist/by-summoner/{}?rankedQueues=RANKED_SOLO_5x5&seasons={}&api_key={}".format(
-                        target["region"], target["summoner_id"], target["seasons"], self.api_key)
+                "{}/v2.2/matchlist/by-summoner/{}?rankedQueues=RANKED_SOLO_5x5&api_key={}".format(
+                        target["region"], target["summoner_id"], self.api_key)
         )
         matches = sorted(matches_dict["matches"], key=lambda k: k['matchId'])
         return matches
 
     # def get_match_info(self, region, match_id):
 
-    def get_champions_info(self, target):
+    def get_champions_info(self, target: dict):
         champions_dict = self.url_response_as_json(
                 "global",
                 "static-data/{}/v1.2/champion?dataById=true&api_key={}".format(target["region"], self.api_key)
         )
-        return champions_dict["data"]
+        return {"version": champions_dict["version"], "champions": champions_dict["data"]}
+
