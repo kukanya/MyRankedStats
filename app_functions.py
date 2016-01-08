@@ -55,6 +55,9 @@ def process_matches_data(api: PersonalAPI, db: DB, target: dict):
             "deaths": match_stats["deaths"],
             "assists": match_stats["assists"]
         })
+    db.insert("matches", matches)
+
+
 def get_stats(db: DB, params={}):
     matches = db.get_data("matches", params)
     if len(params):
