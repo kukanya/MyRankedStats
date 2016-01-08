@@ -31,8 +31,7 @@ class DB(object):
         self.connection.commit()
 
     # Expects list of dictionaries as 'data' argument
-    def refill_table(self, table, data: list):
-        self.cursor.execute("DELETE FROM {}".format(table))
+    def insert(self, table, data: list):
         self.cursor.execute(
                 "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = {}".format(sqlp(table))
         )
@@ -40,6 +39,25 @@ class DB(object):
         for row in data:
             self.cursor.execute("INSERT INTO {} VALUES ({})".format(
                     table, reduce(lambda x, y: "{}, {}".format(x, y), map(lambda c: sqlp(row[c]), columns)))
+            )
+        self.connection.commit()
+
+    # Expects list of dictionaries as 'data' argument
+    def update(self, table, data: list):
+        self.cursor.execute(
+            "SHOW KEYS FROM {} WHERE Key_name = 'PRIMARY'".format(table)
+        )
+        primary_key = self.cursor.fetchone()["Column_name"]
+        self.cursor.execute(
+                "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = {}".format(sqlp(table))
+        )
+        columns = set(map(lambda x: x["COLUMN_NAME"], self.cursor.fetchall()))
+        columns.remove(primary_key)
+        for row in data:
+            self.cursor.execute("UPDATE {} SET {} WHERE {} = {}".format(
+                    table, reduce(lambda x, y: "{}, {}".format(x, y),
+                                  map(lambda c: "{} = {}".format(c, sqlp(row[c])), columns)),
+                    primary_key, sqlp(row[primary_key]))
             )
         self.connection.commit()
 
@@ -55,4 +73,3 @@ class DB(object):
 
 if __name__ == '__main__':
     db = DB()
-    print(db.get_data("matches", {"role": ["Support", "Middle"], "championId": [267, 143]}))

@@ -48,10 +48,9 @@ class PersonalAPI:
         return target_info
 
 
-
-    def get_champions_info(self, target: dict):
+    def get_champions_info(self):
         champions_dict = self.url_response_as_json(
                 "global",
-                "static-data/{}/v1.2/champion?dataById=true&api_key={}".format(target["region"], self.api_key)
+                "static-data/euw/v1.2/champion?dataById=true&api_key={}".format(self.api_key)
         )
         return {"version": champions_dict["version"], "champions": champions_dict["data"]}

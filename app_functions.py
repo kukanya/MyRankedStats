@@ -12,21 +12,27 @@ roles_dict = {
 }
 
 
-def process_champions_data(api: PersonalAPI, db: DB, target: dict):
-    champions_dict = api.get_champions_info(target)
+def process_champions_data(api: PersonalAPI, db: DB):
+    champions_dict = api.get_champions_info()
     db_version = db.get_version()
     api_version = champions_dict["version"]
     if db_version != api_version:
-        champions = []
+        champions_new = []
         for champ in champions_dict["champions"]:
-            champions.append({
-                "championId": champ,
+            champions_new.append({
+                "championId": int(champ),
                 "name": champions_dict["champions"][champ]["name"],
                 "title": champions_dict["champions"][champ]["title"]
             })
-        champions.sort(key=lambda k: k['championId'])
-        db.clear_table("matches")
-        db.refill_table("champions", champions)
+        champions_new.sort(key=lambda k: k['championId'])
+        champions_old = db.get_data("champions")
+        champions_old.sort(key=lambda k: k['championId'])
+        champions_update = list(filter(
+                lambda c: c["championId"] in set(map(lambda co: co["championId"], champions_old)), champions_new))
+        champions_insert = list(filter(
+                lambda c: c["championId"] not in set(map(lambda co: co["championId"], champions_old)), champions_new))
+        db.update("champions", champions_update)
+        db.insert("champions", champions_insert)
         db.set_version(api_version)
 
 
@@ -49,8 +55,6 @@ def process_matches_data(api: PersonalAPI, db: DB, target: dict):
             "deaths": match_stats["deaths"],
             "assists": match_stats["assists"]
         })
-    db.refill_table("matches", matches)
-
 def get_stats(db: DB, params={}):
     matches = db.get_data("matches", params)
     if len(params):
