@@ -6,15 +6,22 @@ import urllib.error
 class PersonalAPI:
     API = "https://{}.api.pvp.net/api/lol/"
 
+    class ApiError(BaseException):
+        pass
+
+    class MatchNotFound(ApiError):
+        def __init__(self, match):
+            self.match = match
+
     def __init__(self, api_key):
         self.api_key = api_key
 
     def url_response_as_json(self, region, query):
         while True:
             try:
-                str = self.API.format(region) + query
-                print(str)
-                response = urlopen(str)
+                request = self.API.format(region) + query
+                # print(request)
+                response = urlopen(request)
                 break
             except urllib.error.HTTPError as err:
                 if err.code == 429:
@@ -44,13 +51,17 @@ class PersonalAPI:
         matches = sorted(matches_dict["matches"], key=lambda k: k['timestamp'])
         return matches
 
-    def get_match_info(self, match_region, match_id, champion_id):
-        # print("getting", match_id, match_region)
-        all_match_info = self.url_response_as_json(
-                match_region,
-                "{}/v2.2/match/{}?api_key={}".format(match_region, match_id, self.api_key)
-        )
-        target_info = tuple(filter(lambda p: p["championId"] == champion_id,
+    def get_match_info(self, match):
+        try:
+            all_match_info = self.url_response_as_json(
+                    match["region"],
+                    "{}/v2.2/match/{}?api_key={}".format(match["region"], match["matchId"], self.api_key)
+            )
+        except urllib.error.HTTPError as err:
+            if err.code == 404:
+                raise self.MatchNotFound(match)
+
+        target_info = tuple(filter(lambda p: p["championId"] == match["championId"],
                                    all_match_info["participants"]))[0]["stats"]
         return target_info
 

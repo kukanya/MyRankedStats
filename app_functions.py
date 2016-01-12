@@ -39,29 +39,40 @@ def process_champions_data(api: PersonalAPI, db: DB):
 def process_matches_data(api: PersonalAPI, db: DB, target: dict):
     riot_matches = api.get_matches_list(target)
     matches = []
-    print(len(riot_matches))
-    for match in riot_matches:
-        match_stats = api.get_match_info(match["region"].lower(), match["matchId"], match["champion"])
-        print(match["champion"], match["lane"], match["role"])
+    print("Matches:", len(riot_matches))
+    not_found = []
+    for riot_match in riot_matches:
+        match = {
+            "region": riot_match["region"].lower(),
+            "matchId": riot_match["matchId"],
+            "championId": riot_match["champion"],
+            "season": riot_match["season"],
+            "timestamp": riot_match["timestamp"],
+        }
+
         try:
-            if match["role"] in roles_dict:
-                role = roles_dict[match["role"]]
+            if riot_match["role"] in roles_dict:
+                role = roles_dict[riot_match["role"]]
             else:
-                role = roles_dict[match["lane"]]
+                role = roles_dict[riot_match["lane"]]
         except:
-            # print(match["champion"], match["lane"], match["role"])
-            role = match["lane"]+":"+match["role"]
-        matches.append({
-            "matchId": match["matchId"],
-            "season": match["season"],
-            "timestamp": match["timestamp"],
-            "championId": match["champion"],
-            "role": role,
-            "winner": match_stats["winner"],
-            "kills": match_stats["kills"],
-            "deaths": match_stats["deaths"],
-            "assists": match_stats["assists"]
-        })
+            print(match["championId"], riot_match["lane"], riot_match["role"])
+            role = riot_match["lane"]+":"+riot_match["role"]
+        match["role"] = role
+
+        try:
+            match_stats = api.get_match_info(match)
+        except api.MatchNotFound:
+            not_found.append(match)
+            continue
+        match["winner"] = match_stats["winner"]
+        match["kills"] = match_stats["kills"]
+        match["deaths"] = match_stats["deaths"]
+        match["assists"] = match_stats["assists"]
+        matches.append(match)
+
+    print("Processed:", len(matches))
+    print("Not found:", len(not_found))
     db.clear_table("matches")
     db.insert("matches", matches)
 
