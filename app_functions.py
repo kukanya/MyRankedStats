@@ -39,15 +39,22 @@ def process_champions_data(api: PersonalAPI, db: DB):
 def process_matches_data(api: PersonalAPI, db: DB, target: dict):
     riot_matches = api.get_matches_list(target)
     matches = []
+    print(len(riot_matches))
     for match in riot_matches:
-        match_stats = api.get_match_info(target, match["matchId"])
-        if match["role"] in roles_dict:
-            role = roles_dict[match["role"]]
-        else:
-            role = roles_dict[match["lane"]]
+        match_stats = api.get_match_info(match["region"].lower(), match["matchId"], match["champion"])
+        print(match["champion"], match["lane"], match["role"])
+        try:
+            if match["role"] in roles_dict:
+                role = roles_dict[match["role"]]
+            else:
+                role = roles_dict[match["lane"]]
+        except:
+            # print(match["champion"], match["lane"], match["role"])
+            role = match["lane"]+":"+match["role"]
         matches.append({
             "matchId": match["matchId"],
             "season": match["season"],
+            "timestamp": match["timestamp"],
             "championId": match["champion"],
             "role": role,
             "winner": match_stats["winner"],
@@ -55,6 +62,7 @@ def process_matches_data(api: PersonalAPI, db: DB, target: dict):
             "deaths": match_stats["deaths"],
             "assists": match_stats["assists"]
         })
+    db.clear_table("matches")
     db.insert("matches", matches)
 
 

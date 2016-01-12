@@ -1,5 +1,6 @@
 import json
 from urllib.request import urlopen
+import urllib.error
 
 
 class PersonalAPI:
@@ -11,9 +12,16 @@ class PersonalAPI:
     def url_response_as_json(self, region, query):
         while True:
             try:
-                response = urlopen(self.API.format(region) + query)
+                str = self.API.format(region) + query
+                print(str)
+                response = urlopen(str)
                 break
-            except: pass
+            except urllib.error.HTTPError as err:
+                if err.code == 429:
+                    pass
+                else:
+                    raise
+
         str_res = response.read().decode()
         json_res = json.loads(str_res)
         return json_res
@@ -33,20 +41,18 @@ class PersonalAPI:
                 "{}/v2.2/matchlist/by-summoner/{}?rankedQueues=RANKED_SOLO_5x5&api_key={}".format(
                         target["region"], target["summoner_id"], self.api_key)
         )
-        matches = sorted(matches_dict["matches"], key=lambda k: k['matchId'])
+        matches = sorted(matches_dict["matches"], key=lambda k: k['timestamp'])
         return matches
 
-    def get_match_info(self, target: dict, match_id):
+    def get_match_info(self, match_region, match_id, champion_id):
+        # print("getting", match_id, match_region)
         all_match_info = self.url_response_as_json(
-                target["region"],
-                "{}/v2.2/match/{}?api_key={}".format(target["region"], match_id, self.api_key)
+                match_region,
+                "{}/v2.2/match/{}?api_key={}".format(match_region, match_id, self.api_key)
         )
-        participant_id = tuple(filter(lambda p: p["player"]["summonerId"] == target["summoner_id"],
-                                      all_match_info["participantIdentities"]))[0]["participantId"]
-        target_info = tuple(filter(lambda p: p["participantId"] == participant_id,
+        target_info = tuple(filter(lambda p: p["championId"] == champion_id,
                                    all_match_info["participants"]))[0]["stats"]
         return target_info
-
 
     def get_champions_info(self):
         champions_dict = self.url_response_as_json(
