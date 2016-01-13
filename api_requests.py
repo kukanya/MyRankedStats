@@ -45,7 +45,7 @@ class PersonalAPI:
     def get_matches_list(self, target: dict):
         matches_dict = self.url_response_as_json(
                 target["region"],
-                "{}/v2.2/matchlist/by-summoner/{}?rankedQueues=RANKED_SOLO_5x5&api_key={}".format(
+                "{}/v2.2/matchlist/by-summoner/{}?rankedQueues=RANKED_SOLO_5x5&seasons=SEASON2015&api_key={}".format(
                         target["region"], target["summoner_id"], self.api_key)
         )
         matches = sorted(matches_dict["matches"], key=lambda k: k['timestamp'])
@@ -60,6 +60,9 @@ class PersonalAPI:
         except urllib.error.HTTPError as err:
             if err.code == 404:
                 raise self.MatchNotFound(match)
+            else: raise
+        except:
+            raise
 
         target_info = tuple(filter(lambda p: p["championId"] == match["championId"],
                                    all_match_info["participants"]))[0]["stats"]

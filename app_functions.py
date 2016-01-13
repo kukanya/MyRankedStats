@@ -41,6 +41,8 @@ def process_matches_data(api: PersonalAPI, db: DB, target: dict):
     matches = []
     print("Matches:", len(riot_matches))
     not_found = []
+    cannot_analyse = []
+    offmeta = []
     for riot_match in riot_matches:
         match = {
             "region": riot_match["region"].lower(),
@@ -50,6 +52,10 @@ def process_matches_data(api: PersonalAPI, db: DB, target: dict):
             "timestamp": riot_match["timestamp"],
         }
 
+        if "role" not in riot_match or "lane" not in riot_match:
+            cannot_analyse.append(match)
+            continue
+
         try:
             if riot_match["role"] in roles_dict:
                 role = roles_dict[riot_match["role"]]
@@ -57,7 +63,9 @@ def process_matches_data(api: PersonalAPI, db: DB, target: dict):
                 role = roles_dict[riot_match["lane"]]
         except:
             print(match["championId"], riot_match["lane"], riot_match["role"])
-            role = riot_match["lane"]+":"+riot_match["role"]
+            offmeta.append(match)
+            continue
+
         match["role"] = role
 
         try:
@@ -73,6 +81,8 @@ def process_matches_data(api: PersonalAPI, db: DB, target: dict):
 
     print("Processed:", len(matches))
     print("Not found:", len(not_found))
+    print("Cannot analyse:", len(cannot_analyse))
+    print("Offmeta:", len(offmeta))
     db.clear_table("matches")
     db.insert("matches", matches)
 
