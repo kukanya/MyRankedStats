@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Хост: 127.0.0.1
--- Время создания: Янв 07 2016 г., 22:52
+-- Время создания: Янв 13 2016 г., 01:01
 -- Версия сервера: 10.1.9-MariaDB
 -- Версия PHP: 5.6.15
 
@@ -39,7 +39,9 @@ CREATE TABLE `champions` (
 --
 
 CREATE TABLE `matches` (
+  `region` varchar(5) NOT NULL,
   `matchId` bigint(15) NOT NULL,
+  `timestamp` bigint(20) NOT NULL,
   `season` varchar(20) NOT NULL,
   `championId` int(10) NOT NULL,
   `role` varchar(20) NOT NULL,
@@ -80,7 +82,7 @@ ALTER TABLE `champions`
 -- Индексы таблицы `matches`
 --
 ALTER TABLE `matches`
-  ADD PRIMARY KEY (`matchId`),
+  ADD PRIMARY KEY (`region`,`matchId`),
   ADD KEY `championId` (`championId`);
 
 --
@@ -97,7 +99,7 @@ ALTER TABLE `meta`
 -- Ограничения внешнего ключа таблицы `matches`
 --
 ALTER TABLE `matches`
-  ADD CONSTRAINT `matches_ibfk_1` FOREIGN KEY (`championId`) REFERENCES `champions` (`championId`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `matches_ibfk_1` FOREIGN KEY (`championId`) REFERENCES `champions` (`championId`) ON UPDATE CASCADE;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
