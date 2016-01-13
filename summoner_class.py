@@ -15,7 +15,11 @@ class Summoner(object):
     def __init__(self, api: PersonalAPI, db: DB, region, name):
         self.region = region
         self.name = name
-        (self.summonerId, self.name) = api.get_summoner_id_and_name(self.__dict__)
+        try:
+            (self.summonerId, self.name) = api.get_summoner_id_and_name(self.__dict__)
+        except api.SummonerNotFound:
+            print("Summoner named {} doesn't exist in {} region".format(self.name, self.region))
+            return
         in_db = self._search_summoner(db)
         if not in_db:
             self.timestamp = 0
@@ -26,13 +30,16 @@ class Summoner(object):
         self._set_timestamp(db)
 
     def __str__(self):
-        str_ = "Region: {}\nName: {}\nSummoner ID: {}".format(self.region, self.name, self.summonerId)
+        str_ = "Region: {}\nName: {}".format(self.region, self.name)
         return str_
 
     def _set_timestamp(self, db):
-        sum_dict = self.__dict__
-        sum_dict['timestamp'] = db.get_max("matches", "timestamp", self._as_param_dict())+1
-        db.update("summoners", [sum_dict])
+        self.__dict__['timestamp'] = db.get_max("matches", "timestamp", self._as_param_dict())
+        if type(self.__dict__["timestamp"]) is int:
+            self.__dict__["timestamp"] += 1
+        else:
+            self.__dict__["timestamp"] = 0
+        db.update("summoners", [self.__dict__])
 
     def _get_timestamp(self, db):
         return db.get_data("summoners", self._as_param_dict())[0]['timestamp']

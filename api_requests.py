@@ -13,6 +13,10 @@ class PersonalAPI:
         def __init__(self, match):
             self.match = match
 
+    class SummonerNotFound(ApiError):
+        def __init__(self, summoner_dict):
+            self.summoner_dict = summoner_dict
+
     def __init__(self, api_key):
         self.api_key = api_key
 
@@ -34,10 +38,17 @@ class PersonalAPI:
         return json_res
 
     def get_summoner_id_and_name(self, target: dict):
-        summoner_info = self.url_response_as_json(
-                target["region"],
-                "{}/v1.4/summoner/by-name/{}?api_key={}".format(target["region"], target["name"], self.api_key)
-        )
+        try:
+            summoner_info = self.url_response_as_json(
+                    target["region"],
+                    "{}/v1.4/summoner/by-name/{}?api_key={}".format(target["region"], target["name"], self.api_key)
+            )
+        except urllib.error.HTTPError as err:
+            if err.code == 404:
+                raise self.SummonerNotFound(target)
+            else:
+                raise
+
         summoner_id = summoner_info[target["name"].lower()]['id']
         summoner_name = summoner_info[target["name"].lower()]['name']
         return summoner_id, summoner_name
@@ -48,7 +59,10 @@ class PersonalAPI:
                 "{}/v2.2/matchlist/by-summoner/{}?rankedQueues=RANKED_SOLO_5x5&seasons=SEASON2015&beginTime={}&api_key={}".format(
                         target["region"], target["summonerId"], target["timestamp"], self.api_key)
         )
-        matches = sorted(matches_dict["matches"], key=lambda k: k['timestamp'])
+        if "matches" in matches_dict:
+            matches = sorted(matches_dict["matches"], key=lambda k: k['timestamp'])
+        else:
+            matches = []
         return matches
 
     def get_match_info(self, match):
@@ -60,9 +74,8 @@ class PersonalAPI:
         except urllib.error.HTTPError as err:
             if err.code == 404:
                 raise self.MatchNotFound(match)
-            else: raise
-        except:
-            raise
+            else:
+                raise
 
         target_info = tuple(filter(lambda p: p["championId"] == match["championId"],
                                    all_match_info["participants"]))[0]["stats"]
