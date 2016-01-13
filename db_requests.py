@@ -27,38 +27,46 @@ class DB(object):
         self.connection.commit()
 
     def clear_table(self, table):
-        self.cursor.execute("DELETE FROM {}".format(table))
+        self.cursor.execute("TRUNCATE {}".format(table))
         self.connection.commit()
 
-    # Expects list of dictionaries as 'data' argument
-    def insert(self, table, data: list):
-        self.cursor.execute(
-                "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = {}".format(sqlp(table))
-        )
-        columns = tuple(map(lambda x: x["COLUMN_NAME"], self.cursor.fetchall()))
-        for row in data:
-            self.cursor.execute("INSERT INTO {} VALUES ({})".format(
-                    table, reduce(lambda x, y: "{}, {}".format(x, y), map(lambda c: sqlp(row[c]), columns)))
-            )
-        self.connection.commit()
+    def _get_primary_keys(self, table):
+        self.cursor.execute("SHOW KEYS FROM {} WHERE Key_name = 'PRIMARY'".format(table))
+        keys = set(map(lambda k: k["Column_name"], self.cursor.fetchall()))
+        return keys
 
-    # Expects list of dictionaries as 'data' argument
-    def update(self, table, data: list):
-        self.cursor.execute(
-            "SHOW KEYS FROM {} WHERE Key_name = 'PRIMARY'".format(table)
-        )
-        primary_key = self.cursor.fetchone()["Column_name"]
+    def _get_columns(self, table):
         self.cursor.execute(
                 "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = {}".format(sqlp(table))
         )
         columns = set(map(lambda x: x["COLUMN_NAME"], self.cursor.fetchall()))
-        columns.remove(primary_key)
+        return columns
+
+    # Expects list of dictionaries as 'data' argument
+    def insert(self, table, data: list):
+        columns = self._get_columns(table)
         for row in data:
-            self.cursor.execute("UPDATE {} SET {} WHERE {} = {}".format(
+            query = "INSERT INTO {} ({}) VALUES ({})".format(
+                    table, reduce(lambda x, y: "{}, {}".format(x, y), columns),
+                    reduce(lambda x, y: "{}, {}".format(x, y), map(lambda c: sqlp(row[c]), columns)))
+            # print(query)
+            self.cursor.execute(query)
+        self.connection.commit()
+
+    # Expects list of dictionaries as 'data' argument
+    def update(self, table, data: list):
+        keys = self._get_primary_keys(table)
+        columns = self._get_columns(table)
+        columns = columns - keys
+        for row in data:
+            query = "UPDATE {} SET {} WHERE {}".format(
                     table, reduce(lambda x, y: "{}, {}".format(x, y),
                                   map(lambda c: "{} = {}".format(c, sqlp(row[c])), columns)),
-                    primary_key, sqlp(row[primary_key]))
+                    reduce(lambda x, y: "{} AND {}".format(x, y),
+                           map(lambda c: "{} = {}".format(c, sqlp(row[c])), keys))
             )
+            # print(query)
+            self.cursor.execute(query)
         self.connection.commit()
 
     # Expects dictionary with NON-EMPTY lists as values as 'params' argument
@@ -71,5 +79,10 @@ class DB(object):
         self.cursor.execute("SELECT * FROM {}".format(table)+param_str)
         return self.cursor.fetchall()
 
-if __name__ == '__main__':
-    db = DB()
+# if __name__ == '__main__':
+#     db = DB()
+#     db.clear_table("matches")
+#     db.insert("matches", [{'winner': True, 'season': "S2014", 'timestamp': 8485888, 'region': "euw", 'deaths': 0,
+#                            'matchId': 123123123, 'role': "Support", 'assists': 100, 'kills': 1, 'championId': 1}])
+#     db.update("matches", [{'winner': True, 'season': "Sea2014", 'timestamp': 8485888, 'region': "euw", 'deaths': 0,
+#                            'matchId': 123123123, 'role': "Support", 'assists': 100, 'kills': 1, 'championId': 1}])
