@@ -6,10 +6,10 @@ api_key = sys.argv[1]
 api = PersonalAPI(api_key)
 db = DB()
 
-summoner = Summoner(api, db, "euw", "wulgrimm")
+process_champions_data(api, db)
+
+summoner = Summoner(api, db, "euw", "lextal")
 print(summoner)
 
-# process_champions_data(api, db)
+summoner.get_stats(db, ["Support"])
 
-# if __name__ == '__main__':
-#     get_role_stats(db, ["Support"])

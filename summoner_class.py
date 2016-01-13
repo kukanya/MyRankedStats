@@ -1,5 +1,7 @@
+from functools import reduce
 from api_requests import PersonalAPI
 from db_requests import DB
+from stats_class import Stats
 
 roles_dict = {
     "MID": "Middle",
@@ -60,50 +62,61 @@ class Summoner(object):
     def _get_matches(self, api: PersonalAPI, db: DB):
         riot_matches = api.get_matches_list(self.__dict__)
         matches = []
-        print("Matches:", len(riot_matches))
-        not_found = []
-        cannot_analyse = []
-        offmeta = []
-        for riot_match in riot_matches:
-            match = {
-                "summonerRegion": self.region,
-                "summonerId": self.summonerId,
-                "region": riot_match["region"].lower(),
-                "matchId": riot_match["matchId"],
-                "championId": riot_match["champion"],
-                "season": riot_match["season"],
-                "timestamp": riot_match["timestamp"],
-            }
+        print("New matches:", len(riot_matches))
+        if len(matches):
+            not_found = []
+            cannot_analyse = []
+            offmeta = []
+            for riot_match in riot_matches:
+                match = {
+                    "summonerRegion": self.region,
+                    "summonerId": self.summonerId,
+                    "region": riot_match["region"].lower(),
+                    "matchId": riot_match["matchId"],
+                    "championId": riot_match["champion"],
+                    "season": riot_match["season"],
+                    "timestamp": riot_match["timestamp"],
+                }
 
-            if "role" not in riot_match or "lane" not in riot_match:
-                cannot_analyse.append(match)
-                continue
+                if "role" not in riot_match or "lane" not in riot_match:
+                    cannot_analyse.append(match)
+                    continue
 
-            try:
-                if riot_match["role"] in roles_dict:
-                    role = roles_dict[riot_match["role"]]
-                else:
-                    role = roles_dict[riot_match["lane"]]
-            except:
-                print(match["championId"], riot_match["lane"], riot_match["role"])
-                offmeta.append(match)
-                continue
+                try:
+                    if riot_match["role"] in roles_dict:
+                        role = roles_dict[riot_match["role"]]
+                    else:
+                        role = roles_dict[riot_match["lane"]]
+                except:
+                    print(match["championId"], riot_match["lane"], riot_match["role"])
+                    offmeta.append(match)
+                    continue
 
-            match["role"] = role
+                match["role"] = role
 
-            try:
-                match_stats = api.get_match_info(match)
-            except api.MatchNotFound:
-                not_found.append(match)
-                continue
-            match["winner"] = match_stats["winner"]
-            match["kills"] = match_stats["kills"]
-            match["deaths"] = match_stats["deaths"]
-            match["assists"] = match_stats["assists"]
-            matches.append(match)
+                try:
+                    match_stats = api.get_match_info(match)
+                except api.MatchNotFound:
+                    not_found.append(match)
+                    continue
+                match["winner"] = match_stats["winner"]
+                match["kills"] = match_stats["kills"]
+                match["deaths"] = match_stats["deaths"]
+                match["assists"] = match_stats["assists"]
+                matches.append(match)
 
-        print("Processed:", len(matches))
-        print("Not found:", len(not_found))
-        print("Cannot analyse:", len(cannot_analyse))
-        print("Offmeta:", len(offmeta))
-        db.insert("matches", matches)
+            print("Processed:", len(matches))
+            print("Not found:", len(not_found))
+            print("Cannot analyse:", len(cannot_analyse))
+            print("Offmeta:", len(offmeta))
+            db.insert("matches", matches)
+
+    def get_stats(self, db, roles):
+        params = self._as_param_dict()
+        params["role"] = roles
+        matches = db.get_data("matches", params)
+        stats = Stats(matches)
+        print("ROLE(S):", reduce(lambda x, y: "{}, {}".format(x, y), roles))
+        print("ROLE(S) STATS:")
+        print(stats)
+
