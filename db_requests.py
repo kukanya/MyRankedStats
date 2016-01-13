@@ -79,9 +79,19 @@ class DB(object):
         self.cursor.execute("SELECT * FROM {}".format(table)+param_str)
         return self.cursor.fetchall()
 
+    def get_max(self, table, column, params={}):
+        param_str = ""
+        if len(params):
+            param_str = " WHERE " + reduce(lambda x, y: "{} AND {}".format(x, y), map(lambda p: "({})".format(
+                reduce(lambda x, y: "{} OR {}".format(x, y), map(lambda v: "{} = {}".format(p, sqlp(v)), params[p]))
+            ), params))
+        self.cursor.execute("SELECT MAX({}) AS max FROM {}".format(column, table)+param_str)
+        return self.cursor.fetchone()["max"]
+
+
 # if __name__ == '__main__':
 #     db = DB()
-#     db.clear_table("matches")
+#     print(db.get_max("matches", "timestamp", {"summonerId": [21630703], "summonerRegion": ["euw"]}))
 #     db.insert("matches", [{'winner': True, 'season': "S2014", 'timestamp': 8485888, 'region': "euw", 'deaths': 0,
 #                            'matchId': 123123123, 'role': "Support", 'assists': 100, 'kills': 1, 'championId': 1}])
 #     db.update("matches", [{'winner': True, 'season': "Sea2014", 'timestamp': 8485888, 'region': "euw", 'deaths': 0,

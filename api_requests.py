@@ -36,17 +36,17 @@ class PersonalAPI:
     def get_summoner_id_and_name(self, target: dict):
         summoner_info = self.url_response_as_json(
                 target["region"],
-                "{}/v1.4/summoner/by-name/{}?api_key={}".format(target["region"], target["summoner_name"], self.api_key)
+                "{}/v1.4/summoner/by-name/{}?api_key={}".format(target["region"], target["name"], self.api_key)
         )
-        summoner_id = summoner_info[target["summoner_name"].lower()]['id']
-        summoner_name = summoner_info[target["summoner_name"].lower()]['name']
+        summoner_id = summoner_info[target["name"].lower()]['id']
+        summoner_name = summoner_info[target["name"].lower()]['name']
         return summoner_id, summoner_name
 
     def get_matches_list(self, target: dict):
         matches_dict = self.url_response_as_json(
                 target["region"],
-                "{}/v2.2/matchlist/by-summoner/{}?rankedQueues=RANKED_SOLO_5x5&seasons=SEASON2015&api_key={}".format(
-                        target["region"], target["summoner_id"], self.api_key)
+                "{}/v2.2/matchlist/by-summoner/{}?rankedQueues=RANKED_SOLO_5x5&seasons=SEASON2015&beginTime={}&api_key={}".format(
+                        target["region"], target["summonerId"], target["timestamp"], self.api_key)
         )
         matches = sorted(matches_dict["matches"], key=lambda k: k['timestamp'])
         return matches
