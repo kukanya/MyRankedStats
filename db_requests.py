@@ -69,7 +69,6 @@ class DB(object):
             self.cursor.execute(query)
         self.connection.commit()
 
-
     # Expects dictionary with NON-EMPTY lists as values as 'params' argument
     def get_data(self, table, params={}):
         param_str = ""
