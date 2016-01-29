@@ -63,7 +63,7 @@ class Summoner(object):
         riot_matches = api.get_matches_list(self.__dict__)
         matches = []
         print("New matches:", len(riot_matches))
-        if len(matches):
+        if len(riot_matches):
             not_found = []
             cannot_analyse = []
             offmeta = []
