@@ -56,8 +56,9 @@ class PersonalAPI:
     def get_matches_list(self, target: dict):
         matches_dict = self.url_response_as_json(
                 target["region"],
-                "{}/v2.2/matchlist/by-summoner/{}?rankedQueues=RANKED_SOLO_5x5&seasons=SEASON2015&beginTime={}&api_key={}".format(
-                        target["region"], target["summonerId"], target["timestamp"], self.api_key)
+                "{}/v2.2/matchlist/by-summoner/{}?rankedQueues={}&seasons={}&beginTime={}&api_key={}".format(
+                        target["region"], target["summonerId"], target["queues"], target["seasons"],
+                        target["timestamp"], self.api_key)
         )
         if "matches" in matches_dict:
             matches = sorted(matches_dict["matches"], key=lambda k: k['timestamp'])

@@ -60,7 +60,9 @@ class Summoner(object):
         db.insert("summoners", [self.__dict__])
 
     def _get_matches(self, api: PersonalAPI, db: DB):
-        riot_matches = api.get_matches_list(self.__dict__)
+        params = self.__dict__.copy()
+        (params["seasons"], params["queues"]) = db.get_seasons_and_queues()
+        riot_matches = api.get_matches_list(params)
         matches = []
         print("New matches:", len(riot_matches))
         if len(riot_matches):

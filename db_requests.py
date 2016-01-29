@@ -26,6 +26,11 @@ class DB(object):
         self.cursor.execute("UPDATE meta SET version = {}".format(sqlp(version)))
         self.connection.commit()
 
+    def get_seasons_and_queues(self):
+        self.cursor.execute("SELECT seasons, queues FROM meta")
+        meta = self.cursor.fetchone()
+        return meta["seasons"], meta["queues"]
+
     def clear_table(self, table):
         self.cursor.execute("TRUNCATE {}".format(table))
         self.connection.commit()

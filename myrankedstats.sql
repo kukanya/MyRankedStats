@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Хост: 127.0.0.1
--- Время создания: Янв 13 2016 г., 06:15
+-- Время создания: Янв 29 2016 г., 03:37
 -- Версия сервера: 10.1.9-MariaDB
 -- Версия PHP: 5.6.15
 
@@ -60,15 +60,17 @@ CREATE TABLE `matches` (
 --
 
 CREATE TABLE `meta` (
-  `version` varchar(20) NOT NULL
+  `version` varchar(20) NOT NULL,
+  `seasons` varchar(200) NOT NULL,
+  `queues` varchar(200) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Дамп данных таблицы `meta`
 --
 
-INSERT INTO `meta` (`version`) VALUES
-('None');
+INSERT INTO `meta` (`version`, `seasons`, `queues`) VALUES
+('0', 'SEASON2015,PRESEASON2016,SEASON2016', 'RANKED_SOLO_5x5,TEAM_BUILDER_DRAFT_RANKED_5x5');
 
 -- --------------------------------------------------------
 
