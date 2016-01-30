@@ -5,6 +5,8 @@ from functools import reduce
 def sqlp(p):
     if type(p) is str:
         return "\"{}\"".format(p)
+    elif p is None:
+        return "NULL"
     else:
         return p
 
@@ -96,8 +98,3 @@ class DB(object):
 
 # if __name__ == '__main__':
 #     db = DB()
-#     print(db.get_max("matches", "timestamp", {"summonerId": [21630703], "summonerRegion": ["euw"]}))
-#     db.insert("matches", [{'winner': True, 'season': "S2014", 'timestamp': 8485888, 'region': "euw", 'deaths': 0,
-#                            'matchId': 123123123, 'role': "Support", 'assists': 100, 'kills': 1, 'championId': 1}])
-#     db.update("matches", [{'winner': True, 'season': "Sea2014", 'timestamp': 8485888, 'region': "euw", 'deaths': 0,
-#                            'matchId': 123123123, 'role': "Support", 'assists': 100, 'kills': 1, 'championId': 1}])

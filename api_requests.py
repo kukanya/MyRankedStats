@@ -28,7 +28,7 @@ class PersonalAPI:
                 response = urlopen(request)
                 break
             except urllib.error.HTTPError as err:
-                if err.code == 429:
+                if err.code in (429, 500, 503):
                     pass
                 else:
                     raise
@@ -78,9 +78,7 @@ class PersonalAPI:
             else:
                 raise
 
-        target_info = tuple(filter(lambda p: p["championId"] == match["championId"],
-                                   all_match_info["participants"]))[0]["stats"]
-        return target_info
+        return all_match_info
 
     def get_champions_info(self):
         champions_dict = self.url_response_as_json(

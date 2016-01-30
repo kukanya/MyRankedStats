@@ -2,26 +2,19 @@ from functools import reduce
 from api_requests import PersonalAPI
 from db_requests import DB
 from stats_class import Stats
-
-roles_dict = {
-    "MID": "Middle",
-    "MIDDLE": "Middle",
-    "TOP": "Top",
-    "JUNGLE": "Jungle",
-    "DUO_SUPPORT": "Support",
-    "DUO_CARRY": "Carry"
-}
-
+import app_functions
 
 class Summoner(object):
     def __init__(self, api: PersonalAPI, db: DB, region, name):
         self.region = region
         self.name = name
+
         try:
             (self.summonerId, self.name) = api.get_summoner_id_and_name(self.__dict__)
         except api.SummonerNotFound:
             print("Summoner named {} doesn't exist in {} region".format(self.name, self.region))
             return
+        print(self)
         in_db = self._search_summoner(db)
         if not in_db:
             self.timestamp = 0
@@ -69,48 +62,33 @@ class Summoner(object):
             not_found = []
             cannot_analyse = []
             offmeta = []
+            opp_error = []
             for riot_match in riot_matches:
                 match = {
                     "summonerRegion": self.region,
-                    "summonerId": self.summonerId,
-                    "region": riot_match["region"].lower(),
-                    "matchId": riot_match["matchId"],
-                    "championId": riot_match["champion"],
-                    "season": riot_match["season"],
-                    "timestamp": riot_match["timestamp"],
+                    "summonerId": self.summonerId
                 }
-
-                if "role" not in riot_match or "lane" not in riot_match:
+                try:
+                    app_functions.process_match_data(api, match, riot_match)
+                except app_functions.CannotAnalyse:
                     cannot_analyse.append(match)
                     continue
-
-                try:
-                    if riot_match["role"] in roles_dict:
-                        role = roles_dict[riot_match["role"]]
-                    else:
-                        role = roles_dict[riot_match["lane"]]
-                except:
-                    print(match["championId"], riot_match["lane"], riot_match["role"])
+                except app_functions.OffMeta:
                     offmeta.append(match)
                     continue
-
-                match["role"] = role
-
-                try:
-                    match_stats = api.get_match_info(match)
-                except api.MatchNotFound:
+                except app_functions.NotFound:
                     not_found.append(match)
                     continue
-                match["winner"] = match_stats["winner"]
-                match["kills"] = match_stats["kills"]
-                match["deaths"] = match_stats["deaths"]
-                match["assists"] = match_stats["assists"]
+                except app_functions.OpponentError:
+                    opp_error.append(match)
+
                 matches.append(match)
 
             print("Processed:", len(matches))
             print("Not found:", len(not_found))
             print("Cannot analyse:", len(cannot_analyse))
             print("Offmeta:", len(offmeta))
+            print("Opponent error:", len(opp_error))
             db.insert("matches", matches)
 
     def get_stats(self, db, roles):

@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Хост: 127.0.0.1
--- Время создания: Янв 29 2016 г., 03:37
+-- Время создания: Янв 30 2016 г., 15:53
 -- Версия сервера: 10.1.9-MariaDB
 -- Версия PHP: 5.6.15
 
@@ -50,7 +50,9 @@ CREATE TABLE `matches` (
   `winner` tinyint(1) NOT NULL,
   `kills` int(4) NOT NULL,
   `deaths` int(4) NOT NULL,
-  `assists` int(4) NOT NULL
+  `assists` int(4) NOT NULL,
+  `primaryOpponent` int(10) DEFAULT NULL,
+  `secondaryOpponent` int(10) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -70,7 +72,7 @@ CREATE TABLE `meta` (
 --
 
 INSERT INTO `meta` (`version`, `seasons`, `queues`) VALUES
-('0', 'SEASON2015,PRESEASON2016,SEASON2016', 'RANKED_SOLO_5x5,TEAM_BUILDER_DRAFT_RANKED_5x5');
+('None', 'SEASON2015,PRESEASON2016,SEASON2016', 'RANKED_SOLO_5x5,TEAM_BUILDER_DRAFT_RANKED_5x5');
 
 -- --------------------------------------------------------
 
@@ -101,7 +103,9 @@ ALTER TABLE `champions`
 ALTER TABLE `matches`
   ADD PRIMARY KEY (`summonerRegion`,`summonerId`,`region`,`matchId`),
   ADD KEY `championId` (`championId`),
-  ADD KEY `summonerRegion` (`summonerRegion`,`summonerId`);
+  ADD KEY `summonerRegion` (`summonerRegion`,`summonerId`),
+  ADD KEY `primaryOpponent` (`primaryOpponent`,`secondaryOpponent`),
+  ADD KEY `secondaryOpponent` (`secondaryOpponent`);
 
 --
 -- Индексы таблицы `meta`
@@ -124,7 +128,9 @@ ALTER TABLE `summoners`
 --
 ALTER TABLE `matches`
   ADD CONSTRAINT `matches_ibfk_1` FOREIGN KEY (`championId`) REFERENCES `champions` (`championId`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `matches_ibfk_2` FOREIGN KEY (`summonerRegion`,`summonerId`) REFERENCES `summoners` (`region`, `summonerId`) ON UPDATE CASCADE;
+  ADD CONSTRAINT `matches_ibfk_2` FOREIGN KEY (`summonerRegion`,`summonerId`) REFERENCES `summoners` (`region`, `summonerId`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `matches_ibfk_3` FOREIGN KEY (`primaryOpponent`) REFERENCES `champions` (`championId`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `matches_ibfk_4` FOREIGN KEY (`secondaryOpponent`) REFERENCES `champions` (`championId`) ON UPDATE CASCADE;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
