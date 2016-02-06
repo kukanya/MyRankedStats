@@ -1,7 +1,7 @@
 from functools import reduce
 from api_requests import PersonalAPI
 from db_requests import DB
-from stats_class import Stats
+from stats_class import FullStats
 import app_functions
 
 class Summoner(object):
@@ -95,7 +95,7 @@ class Summoner(object):
         params = self._as_param_dict()
         params["role"] = roles
         matches = db.get_data("matches", params)
-        stats = Stats(matches)
+        stats = FullStats(matches)
         print("ROLE(S):", reduce(lambda x, y: "{}, {}".format(x, y), roles))
         print("ROLE(S) STATS:")
         print(stats)
