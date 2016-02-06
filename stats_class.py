@@ -1,4 +1,5 @@
 from functools import reduce
+import global_state as glb
 
 
 class BasicStats(object):
@@ -56,7 +57,7 @@ class FullStats(BasicStats):
 
     def __str__(self):
         str_ = BasicStats.__str__(self)
-        opp_stats = lambda o: ("\n    vs {}: {} games, ".format(o, opps[o].games) +
+        opp_stats = lambda o: ("\n    vs {}: {} games, ".format(glb.champions[o]["name"], opps[o].games) +
                                "{0:.0f}% win rate, ".format(opps[o].win_rate) +
                                "{0:.2f} KDA".format(opps[o].kda))
         opps = self.primaryOpponentStats
